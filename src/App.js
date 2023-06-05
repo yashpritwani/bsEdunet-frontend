@@ -1,25 +1,39 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import Map from './Map';
+import Upload from './Upload';
 
-function App() {
+const App = () => {
+  const [activeTab, setActiveTab] = useState('visualise');
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="container">
+      <header className="header">
+        <h1 className="header-title">BS EduNet</h1>
+        <nav className="tabs">
+          <div
+            className={`tab ${activeTab === 'visualise' ? 'active' : ''}`}
+            onClick={() => handleTabClick('visualise')}
+          >
+            Visualise
+          </div>
+          <div
+            className={`tab ${activeTab === 'upload' ? 'active' : ''}`}
+            onClick={() => handleTabClick('upload')}
+          >
+            Upload
+          </div>
+        </nav>
       </header>
+      <div className="content">
+        {activeTab === 'visualise' ? <Map /> : <Upload />}
+      </div>
     </div>
   );
-}
+};
 
 export default App;
