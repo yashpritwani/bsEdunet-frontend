@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import scriptLoader from 'react-async-script-loader';
+// import {MAP_KEY} from process.env;
 
 const containerStyle = {
   width: '100%',
@@ -18,50 +20,43 @@ const defaultCoordinatePoints = [
   { id: 4, latitude: 26.1967, longitude: 78.1971, name: 'IIIT Allahabad', description: 'Renowned institute for IT education' },
 ];
 
-const Map = () => {
+const Map = ({ isScriptLoaded, isScriptLoadSucceed, isActive }) => {
   const [map, setMap] = useState(null);
   const [coordinatePoints, setCoordinatePoints] = useState([]);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [options, setOptions] = useState([]);
 
   useEffect(() => {
-    // Fetch coordinate points from the backend API or use default data
+    if (isScriptLoaded && isScriptLoadSucceed && isActive) {
+      // Fetch coordinate points from the backend API or use default data
+      const fetchCoordinatePoints = async () => {
+        try {
+          // Simulating API response
+          const response = await new Promise((resolve) => setTimeout(() => resolve(defaultCoordinatePoints), 1000));
+          setCoordinatePoints(response);
+        } catch (error) {
+          console.error('Error fetching coordinate points:', error);
+        }
+      };
 
-    const fetchCoordinatePoints = async () => {
-      try {
-        // Simulating API response
-        const response = await new Promise((resolve) =>
-          setTimeout(() => resolve(defaultCoordinatePoints), 1000)
-        );
-        setCoordinatePoints(response);
-      } catch (error) {
-        console.error('Error fetching coordinate points:', error);
-      }
-    };
+      const fetchOptions = async () => {
+        try {
+          // Simulating API response
+          const response = await new Promise((resolve) => setTimeout(() => resolve([
+            { id: 1, value: 'iits', label: 'IITs' },
+            { id: 2, value: 'nits', label: 'NITs' },
+            { id: 3, value: 'iiits', label: 'IIITs' },
+          ]), 1000));
+          setOptions(response);
+        } catch (error) {
+          console.error('Error fetching options:', error);
+        }
+      };
 
-    const fetchOptions = async () => {
-      try {
-        // Simulating API response
-        const response = await new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve([
-                { id: 1, value: 'iits', label: 'IITs' },
-                { id: 2, value: 'nits', label: 'NITs' },
-                { id: 3, value: 'iiits', label: 'IIITs' },
-              ]),
-            1000
-          )
-        );
-        setOptions(response);
-      } catch (error) {
-        console.error('Error fetching options:', error);
-      }
-    };
-
-    fetchCoordinatePoints();
-    fetchOptions();
-  }, []);
+      fetchCoordinatePoints();
+      fetchOptions();
+    }
+  }, [isScriptLoaded, isScriptLoadSucceed, isActive]);
 
   const handleMapLoad = (map) => {
     setMap(map);
@@ -76,7 +71,7 @@ const Map = () => {
   };
 
   return (
-    <div className="map-container">
+    <div className={`map-container ${isActive ? 'active' : ''}`}>
       <header className="map-header">Map</header>
       <div className="map-content">
         <div className="map-sidebar">
@@ -95,12 +90,12 @@ const Map = () => {
             </div>
           ))}
         </div>
-        <div className="map">
-          <LoadScript googleMapsApiKey="AIzaSyAEpSPcs2OBPqv7oEbveYcx-p-JWdmSgcc">
+        {isActive && isScriptLoaded && isScriptLoadSucceed && (
+          <div className="map">
             <GoogleMap
               mapContainerStyle={containerStyle}
               center={center}
-              zoom={4}
+              zoom={5}
               onLoad={handleMapLoad}
             >
               {coordinatePoints.map((point) => (
@@ -130,11 +125,13 @@ const Map = () => {
                 </InfoWindow>
               )}
             </GoogleMap>
-          </LoadScript>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default Map;
+export default scriptLoader([
+  `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_MAP_KEY}&libraries=places`,
+])(Map);

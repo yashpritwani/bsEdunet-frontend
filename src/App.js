@@ -30,7 +30,7 @@ const App = () => {
         </nav>
       </header>
       <div className="content">
-        {activeTab === 'visualise' ? <Map /> : <Upload />}
+        {activeTab === 'visualise' ? <Map isActive={true} /> : <Upload />}
       </div>
     </div>
   );
