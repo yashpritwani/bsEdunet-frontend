@@ -32,9 +32,16 @@ const Upload = () => {
   };
 
   const handleFileChange = (e) => {
-    const uploadedFile = e.target.files[0];
-    setFile(uploadedFile);
-    uploadFile(uploadedFile);
+    console.log(category);
+    if(category) {
+      const uploadedFile = e.target.files[0];
+      setFile(uploadedFile);
+      uploadFile(uploadedFile);
+    } else {
+      setFile(null);
+      setFileContents('');
+      alert('Please select a category before uploading');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -66,6 +73,8 @@ const Upload = () => {
       .get(`${process.env.REACT_APP_HOST_BACKEND}/fetchUndecryptedFiles`)
       .then((response) => {
         setUploadedFiles(response.data);
+        setFile(null);
+        setCategory(null);
       })
       .catch((error) => {
         console.error('Error fetching uploaded files:', error);
@@ -93,7 +102,8 @@ const Upload = () => {
       .then((response) => {
         const fileContents = response.data.fileContents;
         setFileContents(fileContents);
-        alert(`File processed successfully:\n\n${fileContents}`);
+        fetchUploadedFiles();
+        alert(`File/s decrypted successfully and stored to database.`);
       })
       .catch((error) => {
         console.error('Error processing files:', error);
@@ -112,6 +122,7 @@ const Upload = () => {
         <input
           type="text"
           id="categoryInput"
+          value={category}
           onChange={handleCategory}
           style={{
             padding: '8px 12px',
@@ -167,7 +178,7 @@ const Upload = () => {
         )}
       </div>
 
-      <div className="file-input-container" style={{ marginBottom: '20px' }}>
+      {/* <div className="file-input-container" style={{ marginBottom: '20px' }}>
         <label style={{ marginRight: '10px', fontSize: '16px' }}>
           Type Category before Upload:
         </label>
@@ -182,10 +193,10 @@ const Upload = () => {
             width: '300px',
           }}
         />
-      </div>
+      </div> */}
 
       <div className="uploaded-files-container" style={{ textAlign: 'left' }}>
-        <h2 style={{ fontSize: '20px', marginBottom: '10px' }}>Uploaded Files</h2>
+        <h2 style={{ fontSize: '20px', marginBottom: '10px' }}>Uploaded Files which are not decrypted - Select and Submit to decrypt</h2>
         <ul>
           {uploadedFiles.map((uploadedFile) => (
             <li key={uploadedFile._id} style={{ marginBottom: '5px' }}>
@@ -196,7 +207,7 @@ const Upload = () => {
                   onChange={() => handleFileSelection(uploadedFile._id)}
                   style={{ marginRight: '5px' }}
                 />
-                {uploadedFile.name}
+                {uploadedFile.category + ' - ' + uploadedFile.name}
               </label>
             </li>
           ))}

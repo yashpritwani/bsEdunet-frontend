@@ -13,10 +13,6 @@ const center = {
   lng: 78.9629,
 };
 
-const defaultCoordinatePoints = [
-  { id: 0, latitude: 28.7041, longitude: 77.1025, name: 'Delhi NCR', description: 'Capital Of India' },
-];
-
 const Map = ({ isScriptLoaded, isScriptLoadSucceed, isActive }) => {
   const [map, setMap] = useState(null);
   const [coordinatePoints, setCoordinatePoints] = useState([]);
