@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
 import scriptLoader from 'react-async-script-loader';
-// import {MAP_KEY} from process.env;
+import axios from 'axios';
 
 const containerStyle = {
   width: '100%',
@@ -14,10 +14,7 @@ const center = {
 };
 
 const defaultCoordinatePoints = [
-  { id: 1, latitude: 28.7041, longitude: 77.1025, name: 'IIT Delhi', description: 'Premier engineering institute in India' },
-  { id: 2, latitude: 25.4358, longitude: 81.8463, name: 'IIT Kanpur', description: 'One of the oldest IITs in India' },
-  { id: 3, latitude: 10.9510, longitude: 79.4060, name: 'NIT Trichy', description: 'Top National Institute of Technology' },
-  { id: 4, latitude: 26.1967, longitude: 78.1971, name: 'IIIT Allahabad', description: 'Renowned institute for IT education' },
+  { id: 0, latitude: 28.7041, longitude: 77.1025, name: 'Delhi NCR', description: 'Capital Of India' },
 ];
 
 const Map = ({ isScriptLoaded, isScriptLoadSucceed, isActive }) => {
@@ -25,15 +22,20 @@ const Map = ({ isScriptLoaded, isScriptLoadSucceed, isActive }) => {
   const [coordinatePoints, setCoordinatePoints] = useState([]);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [options, setOptions] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
   useEffect(() => {
     if (isScriptLoaded && isScriptLoadSucceed && isActive) {
-      // Fetch coordinate points from the backend API or use default data
       const fetchCoordinatePoints = async () => {
         try {
-          // Simulating API response
-          const response = await new Promise((resolve) => setTimeout(() => resolve(defaultCoordinatePoints), 1000));
-          setCoordinatePoints(response);
+          const points = [];
+
+          for (const option of selectedOptions) {
+            const response = await axios.get(`${process.env.REACT_APP_HOST_BACKEND}/fetchCoordinates?category=${option}`);
+            points.push(...response.data);
+          }
+
+          setCoordinatePoints(points);
         } catch (error) {
           console.error('Error fetching coordinate points:', error);
         }
@@ -41,22 +43,36 @@ const Map = ({ isScriptLoaded, isScriptLoadSucceed, isActive }) => {
 
       const fetchOptions = async () => {
         try {
-          // Simulating API response
-          const response = await new Promise((resolve) => setTimeout(() => resolve([
-            { id: 1, value: 'iits', label: 'IITs' },
-            { id: 2, value: 'nits', label: 'NITs' },
-            { id: 3, value: 'iiits', label: 'IIITs' },
-          ]), 1000));
-          setOptions(response);
+          const response = await axios.get(`${process.env.REACT_APP_HOST_BACKEND}/fetchOptions`);
+          setOptions(response.data);
         } catch (error) {
           console.error('Error fetching options:', error);
         }
       };
 
       fetchCoordinatePoints();
-      fetchOptions();
+      if (options.length === 0) fetchOptions();
     }
-  }, [isScriptLoaded, isScriptLoadSucceed, isActive]);
+  }, [isScriptLoaded, isScriptLoadSucceed, isActive, selectedOptions]);
+
+  const handleRadio = (e) => {
+    const optionValue = e.target.value;
+    const selectedOptionIndex = selectedOptions.indexOf(optionValue);
+
+    if (selectedOptionIndex === -1) {
+      setSelectedOptions((prevSelectedOptions) => [...prevSelectedOptions, optionValue]);
+    } else {
+      setSelectedOptions((prevSelectedOptions) =>
+        prevSelectedOptions.filter((option) => option !== optionValue)
+      );
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedOptions([]);
+    setCoordinatePoints([]);
+    setSelectedPoint(null);
+  };
 
   const handleMapLoad = (map) => {
     setMap(map);
@@ -71,27 +87,46 @@ const Map = ({ isScriptLoaded, isScriptLoadSucceed, isActive }) => {
   };
 
   return (
-    <div className={`map-container ${isActive ? 'active' : ''}`}>
-      <header className="map-header">Map</header>
-      <div className="map-content">
-        <div className="map-sidebar">
+    <div className={`map-container ${isActive ? 'active' : ''}`} style={{ height: '100vh' }}>
+      <header className="map-header" style={{ fontSize: '20px', padding: '10px' }}>
+        Map
+      </header>
+      <div className="map-content" style={{ display: 'flex' }}>
+        <div className="map-sidebar" style={{ backgroundColor: '#f5f5f5', padding: '20px' }}>
           <h2>Options</h2>
-          {options.map((option) => (
-            <div key={option.id}>
+          {options.map((opt) => (
+            <div key={opt.id} style={{ marginBottom: '10px' }}>
               <label>
                 <input
-                  type="radio"
-                  value={option.value}
-                  checked={option.value === 'iits'} // Default selection
-                  onChange={() => {}}
+                  type="checkbox"
+                  value={opt.value}
+                  checked={selectedOptions.includes(opt.value)}
+                  onChange={handleRadio}
+                  disabled={selectedOptions.includes(opt.value)}
+                  style={{ marginRight: '5px' }}
                 />
-                {option.label}
+                {opt.label}
               </label>
             </div>
           ))}
+          <button
+            type="button"
+            onClick={handleReset}
+            style={{
+              padding: '10px',
+              backgroundColor: '#f44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              marginTop: '20px',
+              cursor: 'pointer',
+            }}
+          >
+            Reset
+          </button>
         </div>
         {isActive && isScriptLoaded && isScriptLoadSucceed && (
-          <div className="map">
+          <div className="map" style={{ height: '100%', width: '100%', position: 'relative' }}>
             <GoogleMap
               mapContainerStyle={containerStyle}
               center={center}
