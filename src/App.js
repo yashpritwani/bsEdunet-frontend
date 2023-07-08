@@ -13,7 +13,7 @@ const App = () => {
   return (
     <div className="container">
       <header className="header">
-        <h1 className="header-title">BSGeoEduNEt 1.0</h1>
+        <h1 className="header-title">BS-GeoEduNet 1.0</h1>
         <nav className="tabs">
           <div
             className={`tab ${activeTab === 'visualise' ? 'active' : ''}`}
